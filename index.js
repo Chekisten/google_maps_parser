@@ -3,8 +3,45 @@ const xlsx = require('xlsx');
 const puppeteer = require("puppeteer");
 console.log("google maps parser!")
 
+//-------функция крутки
+async function scrollUntilNoMoreResults(page, scrollContainerSelector) {
+  await page.evaluate(async (selector) => {
+    const scrollable = document.querySelector(selector);
+    if (!scrollable) return;
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    let noMoreResults = false;
+
+    while (!noMoreResults) {
+      scrollable.scrollTop += 500;
+      await sleep(500);
+
+      // Проверяем, появился ли текст "Больше результатов нет."
+      if (document.querySelector('span.HlvSq')) {
+        noMoreResults = true;
+      }
+    }
+  }, scrollContainerSelector);
+}
+//-----функция крутки
+//---------------Фунцкиця поиска текст
+async function waitForText(page, selector, text, timeout = 5000) {
+  await page.waitForFunction(
+    (selector, text) => {
+      const el = document.querySelector(selector);
+      return el && el.innerText.trim().includes(text);
+    },
+    { timeout },
+    selector,
+    text
+  );
+}
+//-------------функция поиска текста
 console.log("Чтение файла")
-const data = fs.readFileSync('./test.csv', 'utf-8');
+const data = fs.readFileSync('./west_java_sec.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -45,39 +82,35 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 console.log("Пытаемся виткрыть")
 
 const MiddleEnd = [];
+const errBook = [];
+let schet = 1;
+let numberOfSites = 0;
+let companiesCount = 0;
   for(const item of InputArr){
     await page.goto(`https://www.google.com/maps/search/${item.keyword}/${item.coordinate}`);
-     await page.waitForSelector('a[class="hfpxzc"]') 
+  const found = await Promise.any([
+  page.waitForSelector('a.hfpxzc', { timeout: 5000 }),
+  page.waitForSelector('h1.DUwDvf', { timeout: 5000 })
+]);
+ 
 
-    
-    //------------------samoscrutka--------------
-console.log("Прокрутка")
-
-async function scrollUntilNoMoreResults(page, scrollContainerSelector) {
-  await page.evaluate(async (selector) => {
-    const scrollable = document.querySelector(selector);
-    if (!scrollable) return;
-
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+    if( !await page.$('a[class="hfpxzc"]')) {
+    console.log('скипаемся')
+    console.log(`просмотренно ${schet} координат `);
+    schet = schet + 1;
     }
-
-    let noMoreResults = false;
-
-    while (!noMoreResults) {
-      scrollable.scrollTop += 500;
-      await sleep(500);
-
-      // Проверяем, появился ли текст "Больше результатов нет."
-      if (document.querySelector('span.HlvSq')) {
-        noMoreResults = true;
-      }
-    }
-  }, scrollContainerSelector);
-}
-
-// пример использования:
-await scrollUntilNoMoreResults(page, 'div[role="feed"]');
+    // начало крутки:
+    if (await page.$('a[class="hfpxzc"]')){
+      console.log("всё ок, крутим")
+        console.log("Прокрутка")
+  try {
+    await scrollUntilNoMoreResults(page, 'div[role="feed"]');
+  }
+  catch (err){
+    console.log(`ошибка при прокрутке блока ${item.coordinate}`)
+   const errCoor = item.coordinate;
+   errBook.push({ coordinate: errCoor });
+  }
 
 //--------------Конец самокрутки
 console.log("начало сбора информации")
@@ -95,54 +128,159 @@ console.log(`Количество элементов с селектором "${
 console.log(`Количество сайтов"${siteSelector}": ${sitesCount}`);
 console.log(selCount)
 console.log(sitesCount)
+numberOfSites = numberOfSites + sitesCount;
+
 
 for (let i = 0; i < selCount; i++) {
-  
+ console.log("Новый сбор гоев")
 
+  // try {await page.waitForSelector('span.a5H0ec');}
+  // catch(err){
+  //   console.log("недождались селектора")
+  // }
 
   const data = await page.evaluate((i, item) => {
     // выбираем карточку по индексу
     const card = document.querySelectorAll('div.lI9IFe')[i];
     if (!card) return { name: 'N/D', site: 'N/D', firstSpan: 'N/D' };
+       // const open = document.querySelectorAll('a.hfpxzc')[i].click();
 
     // название компании
+    
+    
     const name = card.querySelector('div.qBF1Pd.fontHeadlineSmall')?.innerText || 'N/D';
     const site = card.querySelector('a.lcr4fd.S9kvJb')?.href || 'N/D';
-
-
-   
-
-
     const review = card.querySelector('span.UY7F9')?.innerText || 'N/D';
     const mark = card.querySelector('span.MW4etd')?.innerText || 'N/D';
     const phone = card.querySelector('span.UsdlK')?.innerText || 'N/D';
     const adress = card.querySelectorAll('div[class="W4Efsd"] div[class="W4Efsd"] span')[2]?.innerText || 'N/D';
     const type = card.querySelector('div[class="W4Efsd"] div[class="W4Efsd"] span')?.innerText || 'N/D';
     const region = item.name;
+    const cardName = "N/D";
+    const cardSite = "N/D";
+    const shortSite = "N/D";
 
-
-    return { name, site, review, mark, phone,adress, type, region };
-
+    return { name, site, review, mark, phone,adress, type, region, cardName, cardSite, shortSite};
+    //return {cardName, cardSite, shortsite, region}
    
   }, i, item);
 
-  console.log(`Собрано для профиля ${i + 1}:`, data);
+  const checkName = data.name
+
+    const cards = await page.$$('a.hfpxzc');
+
+try {
+    await cards[i].click();
+    console.log("Прокликиваем");
+await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+}
+
+catch(err){
+  console.log("НЕ ПРОТЫКАЛОСЬ")
+  
+  try{
+    await cards[i].click();
+    console.log("ЕЩЁ РАЗ ТЫКАЕМ");
+    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+    
+  }
+  catch(err){
+    console.log("НЕ  ПРОТЫКАЛОСЬ")
+    try {
+      console.log("ОБОСРАЛИСЬ, НО ОПЯТЬ ТЫКАЕМ (3-й раз йопта)");
+      await cards[i].click();
+      await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+    }
+      catch(err){
+      console.log("ЧОТВОРТЫЙ ТЫК, блэд");
+      await cards[i].click();
+      await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+      }
+  }
+}
+
+
+console.log('Нашли шпигуна');
+console.log(`
+⠄⠄⠄⠄⠄⠄⠄⣠⣴⣶⣿⣿⡿⠶⠄⠄⠄⠄⠐⠒⠒⠲⠶⢄⠄⠄⠄⠄⠄
+⠄⠄⠄⠄⠄⣠⣾⡿⠟⠋⠁⠄⢀⣀⡀⠤⣦⢰⣤⣶⢶⣤⣤⣈⣆⠄⠄⠄⠄
+⠄⠄⠄⠄⢰⠟⠁⠄⢀⣤⣶⣿⡿⠿⣿⣿⣊⡘⠲⣶⣷⣶⠶⠶⠶⠦⠤⡀⠄
+⠄⠔⠊⠁⠁⠄⠄⢾⡿⣟⡯⣖⠯⠽⠿⠛⠛⠭⠽⠊⣲⣬⠽⠟⠛⠛⠭⢵⣂
+⡎⠄⠄⠄⠄⠄⠄⠄⢙⡷⠋⣴⡆⠄⠐⠂⢸⣿⣿⡶⢱⣶⡇⠄⠐⠂⢹⣷⣶
+⡇⠄⠄⠄⠄⣀⣀⡀⠄⣿⡓⠮⣅⣀⣀⣐⣈⣭⠤⢖⣮⣭⣥⣀⣤⣤⣭⡵⠂
+⣤⡀⢠⣾⣿⣿⣿⣿⣷⢻⣿⣿⣶⣶⡶⢖⣢⣴⣿⣿⣟⣛⠿⠿⠟⣛⠉⠄⠄
+⣿⡗⣼⣿⣿⣿⣿⡿⢋⡘⠿⣿⣿⣷⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠄
+⣿⠱⢿⣿⣿⠿⢛⠰⣞⡛⠷⣬⣙⡛⠻⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⠿⠛⣓⡀
+⢡⣾⣷⢠⣶⣿⣿⣷⣌⡛⠷⣦⣍⣛⠻⠿⢿⣶⣶⣶⣦⣤⣴⣶⡶⠾⠿⠟⠁
+⣿⡟⣡⣿⣿⣿⣿⣿⣿⣿⣷⣦⣭⣙⡛⠓⠒⠶⠶⠶⠶⠶⠶⠶⠶⠿⠟⠄⠄  ТЫ ГОЙ
+  `)
+
+
+  const cardData = await page.evaluate(() => {
+        const cardName = document.querySelector('h1.DUwDvf')?.innerText || 'N/D';
+        const cardSite = document.querySelector('a.CsEnBe')?.href || 'N/D';
+        const shortsite = document.querySelector('div[class="rogA2c ITvuef"] div')?.innerText || 'N/D';
+       // document.querySelector('button.VfPpkd-icon-LgbsSe').click();
+    return {cardName, cardSite, shortsite,}
+   }, )
+
+//console.log(cardData);
+data.cardName = cardData.cardName;
+data.cardSite = cardData.cardSite;
+data.shortSite = cardData.shortsite;
+companiesCount = companiesCount + 1;
+console.log(`Насчитали аккаунтов: ${companiesCount}`)
+  
+//console.log(`Собрано для профиля ${i + 1}:`, data);
 MiddleEnd.push(data)
 
 }
 
+console.log(`найденно компаний:${MiddleEnd.length}`)
+console.log(`найдено сайтов:${numberOfSites }`)
+console.log(`просмотренно ${schet} координат `);
+schet = schet + 1;
+
+
+} }
+
 console.log(MiddleEnd)
 
-  }
-
-
+console.log(`найденно компаний:${MiddleEnd.length}`)
+console.log(`найдено сайтов:${numberOfSites }`)
+console.log(`просмотренно ${schet} координат `);
 
 
 
 const worksheet = xlsx.utils.json_to_sheet(MiddleEnd);
+const worksheet2 = xlsx.utils.json_to_sheet(errBook);
 const workbook = xlsx.utils.book_new();
 xlsx.utils.book_append_sheet(workbook, worksheet, "Indonesian Companies");
+xlsx.utils.book_append_sheet(workbook, worksheet2, "Errors");
 xlsx.writeFile(workbook, "Indonesian companies.xlsx");
+
+console.log(`
+  
+  ⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠄⣠⣶⣾⣿⣿⣿⣿⣿⣿⣷⣶⣄⡀⠄⠄⠄⠄⠄
+⣿⣿⣿⣿⣿⣿⣿⣿⠃⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⠄⠄⠄⠄
+⣿⣿⣿⣿⣿⣿⣿⠏⣠⡾⠛⠛⠛⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠄⠄
+⣿⣿⣿⣿⣿⣿⠏⣼⣿⣶⣿⣿⣦⣤⣀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀
+⣿⣿⣿⣿⣿⡏⣼⣿⡿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠉⠛⠻⣿⣿⣿⣿⣿⡷
+⣿⣿⣿⣿⡏⣾⣿⣿⣿⣷⣶⣤⣤⣽⣿⣿⣿⣿⣿⣿⣿⣇⠄⠄⠈⢿⣿⣿⣿⡇
+⣿⣿⣿⢣⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣻⣿⣿⣿⣷⣦⡀⠛⣿⣿⠃
+⣿⣿⢋⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣍⠻⢿⣿⣿⣷⠄⣸⣿⠄
+⣿⣿⣼⣿⣿⣿⣿⣿⣿⣿⣇⣤⣿⡟⠻⣿⣿⣿⣿⣿⣿⣷⣤⣽⣿⣿⣿⣿⣿⠄
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢶⡿⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠄
+⣿⣿⣿⣿⣿⣿⣿⡿⠿⠿⣿⣿⣿⣿⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠄⠄
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣬⣍⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠁⠄⠄
+⡏⡿⣿⣿⣿⣿⣿⣿⣏⣁⡹⠿⣿⣤⣙⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠄⠄⠄⠘
+⡇⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⡇⠄⠄⠄⠄⢀
+⣿⠄⠄⠉⠉⠻⣿⣿⣿⣿⡝⠻⣿⢛⡛⠻⣿⣿⣿⣿⣿⣿⡿⣆⠑⢎⠄⢀⡃⣼
+
+
+Пора баиньки
+  `)
+
 
 
 await browser.disconnect();
