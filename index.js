@@ -43,7 +43,7 @@ async function waitForText(page, selector, text, timeout = 5000) {
 }
 //-------------функция поиска текста
 console.log("Чтение файла")
-const data = fs.readFileSync('./473_coor.csv', 'utf-8');
+const data = fs.readFileSync('./test.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -184,65 +184,32 @@ for (let i = 0; i < selCount; i++) {
     const cards = await page.$$('a.hfpxzc');
 if (picture != "N/D"){
   
-    try {
-        await cards[i].click();
-        console.log("Прокликиваем");
-    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+let tryID = 0;
+let errID = 0;
+  while( tryID < 8){
+    try{
+      await cards[i].click();
+      console.log(`Прокликиваем ${errID}-й раз`);
+      await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+      tryID = 8;
     }
-
-    catch(err){
-      console.log("НЕ ПРОТЫКАЛОСЬ")
-      
-      try{
-        await cards[i].click();
-        console.log("ЕЩЁ РАЗ ТЫКАЕМ");
-        await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-        
-      }
-      catch(err){
-        console.log("НЕ  ПРОТЫКАЛОСЬ")
-        try {
-          console.log("ОБОСРАЛИСЬ, НО ОПЯТЬ ТЫКАЕМ (3-й раз йопта)");
-          await cards[i].click();
-          await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-        }
-          catch(err){
-            try{ console.log("ЧОТВОРТЫЙ ТЫК, блэд");
-              await cards[i].click();
-              await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-            }
-            catch(err){
-              try {console.log("ПЯТЫЙЙЙЙ ТЫК, АААААААААААААААА");
-              await cards[i].click();
-              await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);}
-              catch(err){
-                try {   
-                  console.log("ШОСТОЙ уже ТЫК,ДА ЙОПТА БЛЭд блэд");
-                  await cards[i].click();
-                  await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);}
-                catch(err){
-                  try{
-                    console.log("седьмОООООО........ уже ТЫК,ДА ЙОПТА БЛЭд блэд");
-                    await cards[i].click();
-                    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);
-                  }
-                  catch(err){
-                    console.log("а не пойти ли вам нбибу?")
-                        console.log(`ошибка при прокрутке блока ${item.coordinate}`)
-                        const errCoor = item.coordinate;
-                        const errText = "не смог прожать вот этов вот всё";
-                        const errCompany = checkName;
-                        errBook.push({ coordinate: errCoor,
-                                        text: errText,
-                                        company: errCompany
-                         });
-                  }
-                }
-              }
-            }
-          }
+    catch(err) {
+      errID = errID + 1;
+      tryID = errID;
+      console.log(`ошибка на попытке ${errID}`)
+      if(errID == 8){
+        console.log("а не пойти ли вам нбибу?")
+        console.log(`ошибка при прокрутке блока ${item.coordinate}`)
+        const errCoor = item.coordinate;
+        const errText = "не смог прожать вот этов вот всё";
+        const errCompany = checkName;
+        errBook.push({ coordinate: errCoor,
+                        text: errText,
+                        company: errCompany
+          });
       }
     }
+  }
 
 }
 console.log('Нашли шпигуна');
