@@ -114,14 +114,14 @@ let companiesCount = 0;
     if (await page.$('a[class="hfpxzc"]')){
       console.log("всё ок, крутим")
         console.log("Прокрутка")
-  try {
-    await scrollUntilNoMoreResults(page, 'div[role="feed"]');
-  }
-  catch (err){
-    console.log(`ошибка при прокрутке блока ${item.coordinate}`)
-   const errCoor = item.coordinate;
-   errBook.push({ coordinate: errCoor });
-  }
+  // try {
+  //   await scrollUntilNoMoreResults(page, 'div[role="feed"]');
+  // }
+  // catch (err){
+  //   console.log(`ошибка при прокрутке блока ${item.coordinate}`)
+  //  const errCoor = item.coordinate;
+  //  errBook.push({ coordinate: errCoor });
+  // }
 
 //--------------Конец самокрутки
 console.log("начало сбора информации")
@@ -145,10 +145,6 @@ numberOfSites = numberOfSites + sitesCount;
 for (let i = 0; i < selCount; i++) {
  console.log("Новый сбор гоев")
 
-  // try {await page.waitForSelector('span.a5H0ec');}
-  // catch(err){
-  //   console.log("недождались селектора")
-  // }
 
   const data = await page.evaluate((i, item) => {
     // выбираем карточку по индексу
@@ -179,11 +175,20 @@ for (let i = 0; i < selCount; i++) {
    
   }, i, item);
 
-  const checkName = data.name;
+
+ try {let middleCheck = MiddleEnd.find(item => item.name == data.name && item.adress == data.adress);
+  console.log("Есть совпадение в базе")
+   console.log(middleCheck.adress)
+}
+
+// Если не может найти совпадения, то вылетает ошибка
+ catch(err){
+  console.log("Нет такого в базе")
+const checkName = data.name;
   const picture = data.pichture;
     const cards = await page.$$('a.hfpxzc');
+
 if (picture != "N/D"){
-  
 let tryID = 0;
 let errID = 0;
   while( tryID < 8){
@@ -212,7 +217,7 @@ let errID = 0;
   }
 
 }
-console.log('Нашли шпигуна');
+
 console.log(`
 ⠄⠄⠄⠄⠄⠄⠄⣠⣴⣶⣿⣿⡿⠶⠄⠄⠄⠄⠐⠒⠒⠲⠶⢄⠄⠄⠄⠄⠄
 ⠄⠄⠄⠄⠄⣠⣾⡿⠟⠋⠁⠄⢀⣀⡀⠤⣦⢰⣤⣶⢶⣤⣤⣈⣆⠄⠄⠄⠄
@@ -256,9 +261,13 @@ fs.appendFile(path.resolve(__dirname, "backup.csv"), `${data.name};${data.site};
     throw err;
   }
   console.log("промежуточная запись бекапа");
-  
 })
+}//-------------------------------конец cath err
 
+
+
+
+  
 }
 
 console.log(`найденно компаний:${MiddleEnd.length}`)
