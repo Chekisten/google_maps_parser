@@ -97,6 +97,7 @@ const errBook = [];
 let schet = 1;
 let numberOfSites = 0;
 let companiesCount = 0;
+let doubleComp = 0;
   for(const item of InputArr){
     await page.goto(`https://www.google.com/maps/search/${item.keyword}/${item.coordinate}`);
   const found = await Promise.any([
@@ -114,14 +115,14 @@ let companiesCount = 0;
     if (await page.$('a[class="hfpxzc"]')){
       console.log("всё ок, крутим")
         console.log("Прокрутка")
-  // try {
-  //   await scrollUntilNoMoreResults(page, 'div[role="feed"]');
-  // }
-  // catch (err){
-  //   console.log(`ошибка при прокрутке блока ${item.coordinate}`)
-  //  const errCoor = item.coordinate;
-  //  errBook.push({ coordinate: errCoor });
-  // }
+  try {
+    await scrollUntilNoMoreResults(page, 'div[role="feed"]');
+  }
+  catch (err){
+    console.log(`ошибка при прокрутке блока ${item.coordinate}`)
+   const errCoor = item.coordinate;
+   errBook.push({ coordinate: errCoor });
+  }
 
 //--------------Конец самокрутки
 console.log("начало сбора информации")
@@ -176,9 +177,10 @@ for (let i = 0; i < selCount; i++) {
   }, i, item);
 
 
- try {let middleCheck = MiddleEnd.find(item => item.name == data.name && item.adress == data.adress);
+ try {let middleCheck = MiddleEnd.find(item => item.name == data.name && item.adress == data.adress && item.review == data.review && item.phone == data.phone);
   console.log("Есть совпадение в базе")
-   console.log(middleCheck.adress)
+  doubleComp = doubleComp + 1
+   console.log(middleCheck.name)
 }
 
 // Если не может найти совпадения, то вылетает ошибка
@@ -189,20 +191,20 @@ const checkName = data.name;
     const cards = await page.$$('a.hfpxzc');
 
 if (picture != "N/D"){
-let tryID = 0;
-let errID = 0;
-  while( tryID < 8){
+let tryID = 1;
+let errID = 1;
+  while( tryID < 9){
     try{
       await cards[i].click();
       console.log(`Прокликиваем ${errID}-й раз`);
       await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-      tryID = 8;
+      tryID = 9;
     }
     catch(err) {
       errID = errID + 1;
       tryID = errID;
       console.log(`ошибка на попытке ${errID}`)
-      if(errID == 8){
+      if(errID == 9){
         console.log("а не пойти ли вам нбибу?")
         console.log(`ошибка при прокрутке блока ${item.coordinate}`)
         const errCoor = item.coordinate;
@@ -271,7 +273,7 @@ fs.appendFile(path.resolve(__dirname, "backup.csv"), `${data.name};${data.site};
 }
 
 console.log(`найденно компаний:${MiddleEnd.length}`)
-console.log(`найдено сайтов:${numberOfSites }`)
+console.log(`найдено сайтов в боковой панели:${numberOfSites }`)
 console.log(`просмотренно ${schet} координат `);
 schet = schet + 1;
 
@@ -281,8 +283,9 @@ schet = schet + 1;
 console.log(MiddleEnd)
 
 console.log(`найденно компаний:${MiddleEnd.length}`)
-console.log(`найдено сайтов:${numberOfSites }`)
+console.log(`найдено сайтов в боковой панели:${numberOfSites }`)
 console.log(`просмотренно ${schet} координат `);
+console.log(`Пропущено дубликатов: ${doubleComp}`)
 
 
 
