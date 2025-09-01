@@ -5,6 +5,6 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "dev": "node index.js"
+    "dev": "node --inspect index.js"
   }
 }

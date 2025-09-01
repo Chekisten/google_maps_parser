@@ -1,6 +1,8 @@
 const fs = require('fs');
+const path = require('path')
 const xlsx = require('xlsx');
 const puppeteer = require("puppeteer");
+const { resolve } = require('path');
 console.log("google maps parser!")
 
 //-------функция крутки
@@ -41,7 +43,7 @@ async function waitForText(page, selector, text, timeout = 5000) {
 }
 //-------------функция поиска текста
 console.log("Чтение файла")
-const data = fs.readFileSync('./west_java_sec.csv', 'utf-8');
+const data = fs.readFileSync('./473_coor.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -57,6 +59,15 @@ const InputArr = row.slice(1).map(row => {
 });
 console.log(InputArr)
 console.log("Конец чтения файла")
+
+console.log("Запись бэкапа");
+fs.writeFile(path.resolve(__dirname, "backup.csv"), 'name;site;backupSite;review;mark;phone;adress;type;region;cardName;cardSite;' + "\n", (err) => {
+  if(err){
+    throw err;
+  }
+  console.log("файл бэкапа создан")
+} )
+
 
 console.log("Запуск браузера")
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -150,56 +161,90 @@ for (let i = 0; i < selCount; i++) {
     
     const name = card.querySelector('div.qBF1Pd.fontHeadlineSmall')?.innerText || 'N/D';
     const site = card.querySelector('a.lcr4fd.S9kvJb')?.href || 'N/D';
+    const backupSite = card.querySelector('a.lcr4fd.S9kvJb')?.href || 'N/D';
     const review = card.querySelector('span.UY7F9')?.innerText || 'N/D';
     const mark = card.querySelector('span.MW4etd')?.innerText || 'N/D';
     const phone = card.querySelector('span.UsdlK')?.innerText || 'N/D';
     const adress = card.querySelectorAll('div[class="W4Efsd"] div[class="W4Efsd"] span')[2]?.innerText || 'N/D';
     const type = card.querySelector('div[class="W4Efsd"] div[class="W4Efsd"] span')?.innerText || 'N/D';
+    const buttonSite = card.querySelector('a[data-value="Сайт"]')?.href || 'N/D';
+    const pichture = card.querySelector('div[class="SpFAAb"] img')?.src || 'N/D';
     const region = item.name;
     const cardName = "N/D";
     const cardSite = "N/D";
     const shortSite = "N/D";
 
-    return { name, site, review, mark, phone,adress, type, region, cardName, cardSite, shortSite};
+    return { name, site, backupSite, review, mark, phone,adress, type, region, cardName, cardSite, shortSite, buttonSite,pichture};
     //return {cardName, cardSite, shortsite, region}
    
   }, i, item);
 
-  const checkName = data.name
-
+  const checkName = data.name;
+  const picture = data.pichture;
     const cards = await page.$$('a.hfpxzc');
-
-try {
-    await cards[i].click();
-    console.log("Прокликиваем");
-await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-}
-
-catch(err){
-  console.log("НЕ ПРОТЫКАЛОСЬ")
+if (picture != "N/D"){
   
-  try{
-    await cards[i].click();
-    console.log("ЕЩЁ РАЗ ТЫКАЕМ");
-    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
-    
-  }
-  catch(err){
-    console.log("НЕ  ПРОТЫКАЛОСЬ")
     try {
-      console.log("ОБОСРАЛИСЬ, НО ОПЯТЬ ТЫКАЕМ (3-й раз йопта)");
-      await cards[i].click();
-      await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+        await cards[i].click();
+        console.log("Прокликиваем");
+    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
     }
-      catch(err){
-      console.log("ЧОТВОРТЫЙ ТЫК, блэд");
-      await cards[i].click();
-      await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+
+    catch(err){
+      console.log("НЕ ПРОТЫКАЛОСЬ")
+      
+      try{
+        await cards[i].click();
+        console.log("ЕЩЁ РАЗ ТЫКАЕМ");
+        await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+        
       }
-  }
+      catch(err){
+        console.log("НЕ  ПРОТЫКАЛОСЬ")
+        try {
+          console.log("ОБОСРАЛИСЬ, НО ОПЯТЬ ТЫКАЕМ (3-й раз йопта)");
+          await cards[i].click();
+          await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+        }
+          catch(err){
+            try{ console.log("ЧОТВОРТЫЙ ТЫК, блэд");
+              await cards[i].click();
+              await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 1000);
+            }
+            catch(err){
+              try {console.log("ПЯТЫЙЙЙЙ ТЫК, АААААААААААААААА");
+              await cards[i].click();
+              await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);}
+              catch(err){
+                try {   
+                  console.log("ШОСТОЙ уже ТЫК,ДА ЙОПТА БЛЭд блэд");
+                  await cards[i].click();
+                  await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);}
+                catch(err){
+                  try{
+                    console.log("седьмОООООО........ уже ТЫК,ДА ЙОПТА БЛЭд блэд");
+                    await cards[i].click();
+                    await waitForText(page, 'h1.DUwDvf.lfPIob', `${checkName}`, 2000);
+                  }
+                  catch(err){
+                    console.log("а не пойти ли вам нбибу?")
+                        console.log(`ошибка при прокрутке блока ${item.coordinate}`)
+                        const errCoor = item.coordinate;
+                        const errText = "не смог прожать вот этов вот всё";
+                        const errCompany = checkName;
+                        errBook.push({ coordinate: errCoor,
+                                        text: errText,
+                                        company: errCompany
+                         });
+                  }
+                }
+              }
+            }
+          }
+      }
+    }
+
 }
-
-
 console.log('Нашли шпигуна');
 console.log(`
 ⠄⠄⠄⠄⠄⠄⠄⣠⣴⣶⣿⣿⡿⠶⠄⠄⠄⠄⠐⠒⠒⠲⠶⢄⠄⠄⠄⠄⠄
@@ -218,13 +263,19 @@ console.log(`
 
   const cardData = await page.evaluate(() => {
         const cardName = document.querySelector('h1.DUwDvf')?.innerText || 'N/D';
-        const cardSite = document.querySelector('a.CsEnBe')?.href || 'N/D';
+        const cardSite = document.querySelector('a.CsEnBe')?.href || 'N/D суйта';
+        const cardAdress = document.querySelector('button[data-item-id="address"] div[class^="Io6YTe"]')?.innerText || 'N/D';
         const shortsite = document.querySelector('div[class="rogA2c ITvuef"] div')?.innerText || 'N/D';
+        
        // document.querySelector('button.VfPpkd-icon-LgbsSe').click();
-    return {cardName, cardSite, shortsite,}
+    return {cardName, cardSite, cardAdress, shortsite,}
    }, )
 
 //console.log(cardData);
+let checkSite = cardData.cardSite;
+if (checkSite != 'N/D суйта'){
+  data.site = cardData.cardSite;
+}
 data.cardName = cardData.cardName;
 data.cardSite = cardData.cardSite;
 data.shortSite = cardData.shortsite;
@@ -233,6 +284,13 @@ console.log(`Насчитали аккаунтов: ${companiesCount}`)
   
 //console.log(`Собрано для профиля ${i + 1}:`, data);
 MiddleEnd.push(data)
+fs.appendFile(path.resolve(__dirname, "backup.csv"), `${data.name};${data.site};${data.backupSite};${data.review};${data.mark};${data.phone};${data.adress};${data.type};${data.region};${data.cardName};${data.cardSite}` + "\n", (err) => {
+    if(err){
+    throw err;
+  }
+  console.log("промежуточная запись бекапа");
+  
+})
 
 }
 
