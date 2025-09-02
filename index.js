@@ -43,7 +43,7 @@ async function waitForText(page, selector, text, timeout = 5000) {
 }
 //-------------функция поиска текста
 console.log("Чтение файла")
-const data = fs.readFileSync('./test.csv', 'utf-8');
+const data = fs.readFileSync('./east_java_half.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -57,8 +57,9 @@ const InputArr = row.slice(1).map(row => {
   return obj
 
 });
-console.log(InputArr)
+//console.log(InputArr)
 console.log("Конец чтения файла")
+
 
 console.log("Запись бэкапа");
 fs.writeFile(path.resolve(__dirname, "backup.csv"), 'name;site;backupSite;review;mark;phone;adress;type;region;cardName;cardSite;' + "\n", (err) => {
@@ -101,8 +102,10 @@ let doubleComp = 0;
   for(const item of InputArr){
     await page.goto(`https://www.google.com/maps/search/${item.keyword}/${item.coordinate}`);
   const found = await Promise.any([
+  
   page.waitForSelector('a.hfpxzc', { timeout: 5000 }),
-  page.waitForSelector('h1.DUwDvf', { timeout: 5000 })
+  page.waitForSelector('h1.DUwDvf', { timeout: 5000 }),
+  page.waitForSelector('div.Q2vNVc',{timeout: 5000})
 ]);
  
 
@@ -178,9 +181,9 @@ for (let i = 0; i < selCount; i++) {
 
 
  try {let middleCheck = MiddleEnd.find(item => item.name == data.name && item.adress == data.adress && item.review == data.review && item.phone == data.phone);
-  console.log("Есть совпадение в базе")
   doubleComp = doubleComp + 1
    console.log(middleCheck.name)
+    console.log("Есть совпадение в базе")
 }
 
 // Если не может найти совпадения, то вылетает ошибка

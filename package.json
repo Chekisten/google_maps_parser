@@ -6,6 +6,7 @@
   },
   "scripts": {
     "dev": "node --inspect index.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "merge": "node merger.js"
   }
 }
