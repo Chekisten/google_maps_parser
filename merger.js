@@ -18,7 +18,7 @@ console.log(`
 
 //----------------------------------------------------------------------------
 console.log("Чтение 1-го файла")
-const data = fs.readFileSync('./backup_180_east_java.csv', 'utf-8');
+const data = fs.readFileSync('./east.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -37,7 +37,7 @@ console.log("Конец чтения 1-го файла")
 //---------------------------------------------------------------------
 
 console.log("Чтение 2-го файла")
-const data2 = fs.readFileSync('./2nd_part_east_java.csv', 'utf-8');
+const data2 = fs.readFileSync('./flor.csv', 'utf-8');
 
 const row2 = data2.split("\n").map(row2 => row2.split(';').map(cell => cell.trim()));
 const header2 = row2[0];

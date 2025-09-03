@@ -1,6 +1,7 @@
 # .gitignore
 /node_modules/
 /archive/
+/not_added_in_online/
 backup.csv
 test.js
 draft.js
