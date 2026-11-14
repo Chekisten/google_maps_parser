@@ -43,7 +43,7 @@ async function waitForText(page, selector, text, timeout = 5000) {
 }
 //-------------функция поиска текста
 console.log("Чтение файла")
-const data = fs.readFileSync('./east_java_half.csv', 'utf-8');
+const data = fs.readFileSync('./main.csv', 'utf-8');
 
 const row = data.split("\n").map(row => row.split(';').map(cell => cell.trim()));
 const header = row[0];
@@ -208,7 +208,7 @@ let errID = 1;
       tryID = errID;
       console.log(`ошибка на попытке ${errID}`)
       if(errID == 9){
-        console.log("а не пойти ли вам нбибу?")
+      
         console.log(`ошибка при прокрутке блока ${item.coordinate}`)
         const errCoor = item.coordinate;
         const errText = "не смог прожать вот этов вот всё";
@@ -234,7 +234,7 @@ console.log(`
 ⣿⡗⣼⣿⣿⣿⣿⡿⢋⡘⠿⣿⣿⣷⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡀⠄
 ⣿⠱⢿⣿⣿⠿⢛⠰⣞⡛⠷⣬⣙⡛⠻⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⠿⠛⣓⡀
 ⢡⣾⣷⢠⣶⣿⣿⣷⣌⡛⠷⣦⣍⣛⠻⠿⢿⣶⣶⣶⣦⣤⣴⣶⡶⠾⠿⠟⠁
-⣿⡟⣡⣿⣿⣿⣿⣿⣿⣿⣷⣦⣭⣙⡛⠓⠒⠶⠶⠶⠶⠶⠶⠶⠶⠿⠟⠄⠄  ТЫ ГОЙ
+⣿⡟⣡⣿⣿⣿⣿⣿⣿⣿⣷⣦⣭⣙⡛⠓⠒⠶⠶⠶⠶⠶⠶⠶⠶⠿⠟⠄⠄
   `)
 
 
@@ -250,7 +250,7 @@ console.log(`
 
 //console.log(cardData);
 let checkSite = cardData.cardSite;
-if (checkSite != 'N/D суйта'){
+if (checkSite != 'N/D сайта'){
   data.site = cardData.cardSite;
 }
 data.cardName = cardData.cardName;
@@ -295,9 +295,9 @@ console.log(`Пропущено дубликатов: ${doubleComp}`)
 const worksheet = xlsx.utils.json_to_sheet(MiddleEnd);
 const worksheet2 = xlsx.utils.json_to_sheet(errBook);
 const workbook = xlsx.utils.book_new();
-xlsx.utils.book_append_sheet(workbook, worksheet, "Indonesian Companies");
+xlsx.utils.book_append_sheet(workbook, worksheet, "Google Maps Companies");
 xlsx.utils.book_append_sheet(workbook, worksheet2, "Errors");
-xlsx.writeFile(workbook, "Indonesian companies.xlsx");
+xlsx.writeFile(workbook, "Google Maps Companies.xlsx");
 
 console.log(`
   
@@ -318,7 +318,7 @@ console.log(`
 ⣿⠄⠄⠉⠉⠻⣿⣿⣿⣿⡝⠻⣿⢛⡛⠻⣿⣿⣿⣿⣿⣿⡿⣆⠑⢎⠄⢀⡃⣼
 
 
-Пора баиньки
+The усё
   `)
 
 
